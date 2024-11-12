@@ -57,3 +57,4 @@ yarn.lock
 
 # Miscellaneous
 *.bak
+.vercel
