@@ -66,7 +66,7 @@ app.post('/generate', async (req, res) => {
             user verbatim for code 
             When giving the answer 
             give the code and the output and time complexity and everything required if it's a code related question and explain in detail how every part works.
-            The answer should be atleast 1300 words.
+            The answer should be atleast 1500 words.
             `
         },
         {
