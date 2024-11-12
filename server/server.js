@@ -11,12 +11,11 @@ app.use(cors());
 app.use(express.json());
 
 const groq = new Groq({
-  // apiKey: process.env.GROQ_API_KEY,
-  apiKey: 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,
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 // Route to handle solution generation
-app.post('/generate', async (req, res) => {
+app.post('/api/generate', async (req, res) => {
   const { question } = req.body;
 
   if (!question) {
@@ -92,10 +91,17 @@ app.post('/generate', async (req, res) => {
   }
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-app.get("/", (req, res) => res.send("Express on Vercel"));
+app.get("/api/health", (req, res) => res.json({ status: 'ok' }));
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+// Export the Express API
+module.exports = app;
