@@ -7,7 +7,13 @@ const Groq = require('groq-sdk');
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://your-frontend-domain.vercel.app'],
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
+
 app.use(express.json());
 
 const groq = new Groq({
