@@ -11,7 +11,8 @@ app.use(cors());
 app.use(express.json());
 
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
+  // apiKey: process.env.GROQ_API_KEY,
+  apiKey: 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,
 });
 
 // Route to handle solution generation
