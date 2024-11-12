@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import MessageList from './components/MessageList';
 import Input from './components/Input';
 import { Message } from './types';
+import { Analytics } from "@vercel/analytics/react"
 
 const API_URL = 'https://server-gilt-five-10.vercel.app';
 
@@ -63,6 +64,8 @@ function App() {
           isLoading={isLoading}
         />
       </main>
+
+      <Analytics />
     </div>
   );
 }
