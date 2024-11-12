@@ -8,12 +8,27 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors({
-  origin: ['http://localhost:5173', 'https://latex-ai.vercel.app/'],
-  methods: ['GET', 'POST'],
-  credentials: true
-}));
+// Updated CORS configuration with specific origins
+const allowedOrigins = [
+  'http://localhost:5173',    // Local development
+  'https://latex-ai.vercel.app', // Your deployed frontend
+];
 
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(null, false);
+    }
+    return callback(null, true);
+  },
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
+}));
 app.use(express.json());
 
 const groq = new Groq({
