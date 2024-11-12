@@ -1,5 +1,5 @@
 // App.tsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -7,7 +7,7 @@ import MessageList from './components/MessageList';
 import Input from './components/Input';
 import { Message } from './types';
 
-const API_URL = 'http://localhost:3000';
+const API_URL = 'https://server-gilt-five-10.vercel.app';
 
 function App() {
   const [input, setInput] = useState('');
@@ -20,7 +20,7 @@ function App() {
 
     setIsLoading(true);
     try {
-      const response = await axios.post<Message>(`${API_URL}/generate`, { question: input });
+      const response = await axios.post<Message>(`${API_URL}/api/generate`, { question: input });
       const newMessage = {
         question: input,
         solution: response.data.solution,
