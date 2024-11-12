@@ -8,7 +8,7 @@ import Input from './components/Input';
 import { Message } from './types';
 import { Analytics } from "@vercel/analytics/react"
 
-const API_URL = 'https://server-73htr01io-texz-genzs-projects.vercel.app';
+const API_URL = 'https://server-gilt-five-10.vercel.app';
 
 function App() {
   const [input, setInput] = useState('');
