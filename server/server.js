@@ -8,15 +8,13 @@ dotenv.config();
 
 const app = express();
 
-// Updated CORS configuration with specific origins
 const allowedOrigins = [
-  'http://localhost:5173',    // Local development
-  'https://latex-ai.vercel.app', // Your deployed frontend
+  'http://localhost:5173',
+  'https://latex-ai.vercel.app',
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     if (allowedOrigins.indexOf(origin) === -1) {
       return callback(null, false);
@@ -35,7 +33,8 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// Route to handle solution generation
+const API_URL = 'http://localhost:3000';
+
 app.post('/api/generate', async (req, res) => {
   const { question } = req.body;
 
@@ -51,7 +50,7 @@ app.post('/api/generate', async (req, res) => {
       \\end{solution}
     `;
 
-    const completion = await groq.chat.completions.create({
+    const completionStream = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
@@ -97,16 +96,22 @@ app.post('/api/generate', async (req, res) => {
         },
       ],
       model: "llama3-70b-8192",
+      // Additional options can be added here, like temperature, max_tokens, etc.
+      stream: true,
     });
-    
 
-    const solutionContent = completion.choices[0]?.message?.content.trim() || '';
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
 
-    res.json({
-      question,
-      solution: `${solutionContent}`
-      
-    });
+    for await (const chunk of completionStream) {
+      const solutionPart = chunk.choices[0]?.delta?.content || '';
+      if (solutionPart) {
+        res.write(solutionPart);
+      }
+    }
+    res.end();
   } catch (error) {
     console.error('Error generating solution:', error);
     res.status(500).json({ error: 'Failed to generate solution' });
@@ -117,13 +122,8 @@ const PORT = process.env.PORT || 3000;
 
 app.get("/api/health", (req, res) => res.json({ status: 'ok' }));
 
-// For local development
 if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 }
-
-// Export the Express API
-module.exports = app;
