@@ -6,8 +6,8 @@ import Input from './components/Input';
 import { Message } from './types';
 import { Analytics } from "@vercel/analytics/react";
 
-// const API_URL = 'https://server-gilt-five-10.vercel.app';
-const API_URL = 'http://localhost:3000';
+const API_URL = 'https://server-gilt-five-10.vercel.app';
+// const API_URL = 'http://localhost:3000';
 
 function App() {
   const [input, setInput] = useState('');
