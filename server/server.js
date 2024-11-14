@@ -36,10 +36,14 @@ const groq = new Groq({
 const API_URL = 'http://localhost:3000';
 
 app.post('/api/generate', async (req, res) => {
-  const { question } = req.body;
+  const { question, seed } = req.body;
 
   if (!question) {
     return res.status(400).json({ error: 'Question is required' });
+  }
+
+  if (!seed) {
+    return res.status(400).json({ error: 'Seed is required' });
   }
 
   try {
@@ -50,45 +54,50 @@ app.post('/api/generate', async (req, res) => {
       \\end{solution}
     `;
 
+    const promptWithSeed = `
+      Generate the solution content only for the LaTeX \\begin{solution} and \\end{solution} block. Write the solution elaborately in LaTeX format using Design and Analysis of Algorithms knowledge. Use correct terminology and provide detailed, structured answers.
+
+      Ensure:
+      
+      - The output should be directly copy-pasteable into the given LaTeX template without compile errors.
+      - Specify additional packages if required at the top of the solution.
+      - Avoid errors such as:
+        - "Undefined control sequence"
+        - "Not in outer par mode"
+        - "Missing number, treated as zero"
+      - Check for misplaced braces and ensure proper nesting.
+      - Ensure consistency and detailed explanations that are easy to read.
+      - The code should be indented and formatted properly to avoid underfull or overfull boxes.
+      
+      Seed: ${seed} - Use this to maintain a consistent style for this session.
+
+      Packages already available:
+     
+      - \\usepackage{amssymb, latexsym, amsmath, forest, adjustbox}
+      - \\usepackage[usenames, dvipsnames, svgnames, table]{xcolor}
+      - \\usepackage{graphicx,listings}
+
+      Example format for responses:
+      \\begin{solution}
+      % Full, detailed solution content here
+      \\end{solution}
+
+      don't use these packages - \\usepackage{algorithm} - \\usepackage{algpseudocode}
+      Return only the content between \\begin{solution} and \\end{solution}. Avoid including any additional explanations outside of this block.
+      The solution should be error free and properly formatted such that when it is placed inside the solution block it works properly.
+      Use \\verb for code and provide explanations and outputs as needed.
+      Ensure:
+      - The response aligns with the seed style to maintain consistency across answers within this session.
+      - Answers are detailed, correctly formatted, and align with the mathematical depth required.
+      - If it's an Design analysis and algorithm question then include the time complexity analysis mathematically step by step.
+      The answer should be at least 2000 words .
+    `;
+
     const completionStream = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: `
-            Generate the solution content only for the LaTeX \\begin{solution} and \\end{solution} block. Write the solution elaborately in LaTeX format using Design and Analysis of Algorithms knowledge. Use correct terminology and provide detailed, structured answers. 
-
-            Ensure:
-            
-            - The output should be directly copy-pasteable into the given LaTeX template without compile errors.
-            - Specify additional packages if required at the top of the solution.
-            - Avoid errors such as:
-              - "Undefined control sequence"
-              - "Not in outer par mode"
-              - "Missing number, treated as zero"
-            - Check for misplaced braces and ensure proper nesting.
-            - Ensure consistency and detailed explanations that are easy to read.
-            - The code should be indented and formatted properly to avoid underfull or overfull boxes.
-
-            Packages already available:
-           
-            - \\usepackage{amssymb, latexsym, amsmath, forest, adjustbox}
-            - \\usepackage[usenames, dvipsnames, svgnames, table]{xcolor}
-            - \\usepackage{graphicx}
-
-            Example format for responses:
-            \\begin{solution}
-            % Full, detailed solution content here
-            \\end{solution}
-
-            don't use these packages  - \\usepackage{algorithm} - \\usepackage{algpseudocode}
-            Return only the content between \\begin{solution} and \\end{solution}. Avoid including any additional explanations outside of this block.
-            The solution should be error free and properly formatted such that when it is placed inside the solution block it works properly
-            user verbatim for code 
-            When giving the answer 
-            give the code and the output and time complexity and everything required if it's a code related question and explain in detail how every part works.
-            Use mathematics and algorithms to solve . Don't assume anything.
-            The answer should be atleast 3000 words.
-            `
+          content: promptWithSeed
         },
         {
           role: "user",
@@ -96,7 +105,6 @@ app.post('/api/generate', async (req, res) => {
         },
       ],
       model: "llama3-70b-8192",
-      // Additional options can be added here, like temperature, max_tokens, etc.
       stream: true,
     });
 
