@@ -30,18 +30,20 @@ app.use(cors({
 app.use(express.json());
 
 const apiKeys = [
-  process.env.GROQ_API_KEY1, // Your first API key
+  process.env.GROQ_API_KEY1,
   process.env.GROQ_API_KEY2,  // Your second API key
   process.env.GROQ_API_KEY3,
+  process.env.GROQ_API_KEY4,
+  process.env.GROQ_API_KEY5, 
+  process.env.GROQ_API_KEY6
 ];
 
 let currentKeyIndex = 0;
 
 function getNextApiKey() {
-  const apiKey = apiKeys[currentKeyIndex];
-  currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
-  return apiKey;
+  return apiKeys[Math.floor(Math.random() * apiKeys.length)];
 }
+
 
 async function requestWithRetry(apiCallFunction, retries = 3, delay = 1000) {
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -122,7 +124,7 @@ app.post('/api/generate', async (req, res) => {
       - Before giving the answer humanize the solution such that it's written by a college student in his assignment. Don't use cool or unprofessional language, humanize it but use professional languages students will use in their solution, and every way of writing and formulating
       the sentence will depend on the seed, every seed will write differently.
       - If it's an algorithm question give the pseudocode in code terminology.
-      - Avoid 
+      - Give answer that fits inside the solution box by avoiding the hbox error.
     `;
 
     const completionStream = await requestWithRetry(() => groq.chat.completions.create({
