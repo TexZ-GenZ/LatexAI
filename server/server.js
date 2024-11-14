@@ -89,8 +89,12 @@ app.post('/api/generate', async (req, res) => {
       Ensure:
       - The response aligns with the seed style to maintain consistency across answers within this session.
       - Answers are detailed, correctly formatted, and align with the mathematical depth required.
-      - If it's an Design analysis and algorithm question then include the time complexity analysis mathematically step by step.
-      The answer should be at least 2000 words .
+      - If it's an Design analysis and algorithm question then include the time complexity analysis mathematically step by step, don't write the time complexity directly.
+      - If you want to make code examples then use the pseudocode terminologies instead of normal programming languages.
+      - The answer should be at least 2000 words .
+      - Before giving the answer humanize the solution such that it's written by a college student in his assignment. Don't use cool or unprofessional language, humanize it but use professional languages students will use in their solution, and every way of writing and formulating
+      the sentence will depend on the seed, every seed will write differently.
+      - If it's an algorithm question give the pseudocode in code terminology.
     `;
 
     const completionStream = await groq.chat.completions.create({
