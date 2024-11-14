@@ -29,11 +29,36 @@ app.use(cors({
 }));
 app.use(express.json());
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+const apiKeys = [
+  process.env.GROQ_API_KEY1, // Your first API key
+  process.env.GROQ_API_KEY2,  // Your second API key
+  process.env.GROQ_API_KEY3,
+];
 
-const API_URL = 'http://localhost:3000';
+let currentKeyIndex = 0;
+
+function getNextApiKey() {
+  const apiKey = apiKeys[currentKeyIndex];
+  currentKeyIndex = (currentKeyIndex + 1) % apiKeys.length;
+  return apiKey;
+}
+
+async function requestWithRetry(apiCallFunction, retries = 3, delay = 1000) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await apiCallFunction();
+    } catch (error) {
+      if (error?.code === 'rate_limit_exceeded') {
+        console.error(`Rate limit hit, retrying in ${delay}ms (Attempt ${attempt}/${retries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay *= 2; // Exponential backoff
+      } else {
+        throw error;
+      }
+    }
+  }
+  throw new Error('Failed after max retries');
+}
 
 app.post('/api/generate', async (req, res) => {
   const { question, seed } = req.body;
@@ -47,10 +72,12 @@ app.post('/api/generate', async (req, res) => {
   }
 
   try {
+    const apiKey = getNextApiKey();
+    const groq = new Groq({ apiKey });
+
     const formattedPrompt = `
       \\question \\textbf{\\Large ${question}} \\\\
       \\begin{solution}
-
       \\end{solution}
     `;
 
@@ -95,22 +122,17 @@ app.post('/api/generate', async (req, res) => {
       - Before giving the answer humanize the solution such that it's written by a college student in his assignment. Don't use cool or unprofessional language, humanize it but use professional languages students will use in their solution, and every way of writing and formulating
       the sentence will depend on the seed, every seed will write differently.
       - If it's an algorithm question give the pseudocode in code terminology.
+      - Avoid 
     `;
 
-    const completionStream = await groq.chat.completions.create({
+    const completionStream = await requestWithRetry(() => groq.chat.completions.create({
       messages: [
-        {
-          role: "system",
-          content: promptWithSeed
-        },
-        {
-          role: "user",
-          content: formattedPrompt
-        },
+        { role: "system", content: promptWithSeed },
+        { role: "user", content: formattedPrompt }
       ],
       model: "llama3-70b-8192",
-      stream: true,
-    });
+      stream: true
+    }));
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
